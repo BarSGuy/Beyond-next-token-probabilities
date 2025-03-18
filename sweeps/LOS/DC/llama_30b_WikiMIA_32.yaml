@@ -1,0 +1,82 @@
+# wandb sweep ./sweeps/LOS/DC/llama_30b_WikiMIA_32.yaml
+# conda activate hellucinations3 && CUDA_VISIBLE_DEVICES=2 wandb agent guybs/LOS-Net/7nwrj3q4
+
+
+# cd /home/guy_b/LOS-Net && conda activate hellucinations3 && for i in 4 5; do CUDA_VISIBLE_DEVICES=$i wandb agent guybs/LOS-Net/b2erwm2q & done
+
+program: ./main.py  # Replace with the actual script name
+
+method: grid  # Using grid search to exhaustively find the best hyperparameters
+
+metric:
+  name: best_val_AUC  # Using validation AUC to evaluate performance
+  goal: maximize  # We want to maximize the validation AUC
+
+parameters:
+  # Training settings
+  num_epochs:
+    values: [100, 500, 1000]
+  batch_size:
+    values: [64]
+  patience:
+    values: [100]
+  seed:
+    values: [0]
+
+  # Model architecture
+  probe_model:
+    values: ["LOS-Net", "ATP_R_Transf", "ATP_R_MLP"]
+  hidden_dim:
+    values: [128, 256]
+  num_layers:
+    values: [1, 2]
+  heads:
+    values: [8]
+  dropout:
+    values: [0, 0.3]
+  pool:
+    values: ["cls"]
+
+  # Optimization settings
+  lr:
+    values: [1e-4]
+  weight_decay:
+    values: [0.001]
+
+  # Dataset and input settings
+  train_dataset:
+    values: ["WikiMIA_32"]
+  input_type:
+    values: ["LOS"]
+  input_output_type:
+    values: ["input"]
+  topk_preprocess:
+    values: [1_000_000]
+  topk_dim:
+    values: [1_000_000]
+  rank_encoding:
+    values: ["one_hot_encoding"]
+  num_workers:
+    values: [4]
+  pin_memory:
+    values: [1]
+
+  # Cross-validation
+  num_folds:
+    values: [5]
+  fold_to_run:
+    values: [0, 1, 2, 3, 4]
+
+  # Paths
+  best_model_path:
+    values: ["saved_models"]
+  base_pre_processed_data_dir:
+    values: ['/home/guy_b/LOS-Net/pre_processed_data']
+
+  # Model type
+  LLM:
+    values: ['huggyllama/llama-30b']
+
+  # Hardware settings
+  cuda_idx:
+    values: [0]
