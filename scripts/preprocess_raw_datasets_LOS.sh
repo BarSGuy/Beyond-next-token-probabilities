@@ -17,8 +17,8 @@ DATASETS=("WikiMIA_32" "WikiMIA_64" "BookMIA_128" "imdb" "imdb_test" "movies" "m
 
 # Define models for each dataset
 declare -A MODELS
-MODELS[WikiMIA_32]="EleutherAI/pythia-6.9b EleutherAI/pythia-12b huggyllama/llama-13b huggyllama/llama-30b state-spaces/mamba-1.4b-hf"
-MODELS[WikiMIA_64]="EleutherAI/pythia-6.9b EleutherAI/pythia-12b huggyllama/llama-13b huggyllama/llama-30b state-spaces/mamba-1.4b-hf"
+MODELS[WikiMIA_32]="EleutherAI/pythia-6.9b huggyllama/llama-13b huggyllama/llama-30b state-spaces/mamba-1.4b-hf"
+MODELS[WikiMIA_64]="EleutherAI/pythia-6.9b huggyllama/llama-13b huggyllama/llama-30b state-spaces/mamba-1.4b-hf"
 MODELS[BookMIA_128]="EleutherAI/pythia-6.9b EleutherAI/pythia-12b huggyllama/llama-13b huggyllama/llama-30b"
 
 MODELS[imdb]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct"
