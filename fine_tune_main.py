@@ -152,8 +152,6 @@ def fine_tune_and_evaluate(
     val_data = Subset(dataset_train, val_indices)
 
     
-    device = f"cuda:{args.cuda_idx}" if torch.cuda.is_available() else "cpu"
-    
     assert args.fold_to_run < args.num_folds, "fold_to_run should be less than num_folds."
         
  
