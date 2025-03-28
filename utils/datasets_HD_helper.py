@@ -23,7 +23,7 @@ LIST_OF_DATASETS = ['triviaqa', 'triviaqa_test',
 # NOTE: for all datasets we use 10_000 samples max the same way as in https://github.com/technion-cs-nlp/LLMsKnow
 def imdb_preprocess(args, model_name, reviews, labels):
 
-    prompts = [
+    prompts = []
     labels_to_name = ['negative', 'positive']
 
     review1 = None
