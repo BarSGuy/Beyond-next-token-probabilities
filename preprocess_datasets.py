@@ -32,7 +32,6 @@ def process_datasets(args, logger):
         dataset_name=args.dataset,
         output_dir=output_dir,
         N_max=args.N_max,
-        L_max=args.L_max,
         topk_preprocess=args.topk_preprocess,
         input_output_flag=args.input_output_type
     )
