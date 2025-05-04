@@ -1,6 +1,6 @@
 import torch
 
-def compute_logprobs_with_selection_and_ranks(input_ids, raw_logits, take_top_k=1000000):
+def compute_logprobs_with_selection_and_ranks(input_ids, raw_logits, take_top_k=1000000, HD=False):
     # NOTE: log_probs[0] gives the probability for the next token -- input_ids[1], therefore:
     # for sequence of length n+1, the following holds: 
     # log_probs[-1] is log prob for first word -- we don't have this!
@@ -10,10 +10,16 @@ def compute_logprobs_with_selection_and_ranks(input_ids, raw_logits, take_top_k=
     ## log_probs[n-1] -> input_ids[n] (log prob for last word -- ``end of sentence'')
     # log_probs[n] we don't take! (log prob for the word after ``end of sentence'')
     log_probs = torch.nn.functional.log_softmax(raw_logits, dim=-1)
-    log_probs_of_selected_tokens = log_probs[0][range(len(input_ids[0][1:])), input_ids[0][1:]]  
+    if HD:
+        log_probs_of_selected_tokens = log_probs[0][range(len(input_ids[0])), input_ids[0]]  
+    else:
+        log_probs_of_selected_tokens = log_probs[0][range(len(input_ids[0][1:])), input_ids[0][1:]]  
     
     sorted_log_probs, _ = torch.sort(log_probs, dim=-1, descending=True)
-    sorted_log_probs = sorted_log_probs[0][:-1, :]
+    if HD:
+        sorted_log_probs = sorted_log_probs[0]
+    else:
+        sorted_log_probs = sorted_log_probs[0][:-1, :]
     
     
     sorted_log_probs_inverted, _ = torch.sort(log_probs, dim=-1, descending=False)

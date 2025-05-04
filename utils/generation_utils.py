@@ -16,7 +16,7 @@ def extract_scores(model_output, model_input, take_top_k=1000000):
 
     
     output_ids = model_output['sequences'][0][len(model_input[0]):].cpu()
-    canonized_logits = compute_logprobs_with_selection_and_ranks(input_ids=output_ids.unsqueeze(0), raw_logits=raw_logits.unsqueeze(0), take_top_k=take_top_k)
+    canonized_logits = compute_logprobs_with_selection_and_ranks(input_ids=output_ids.unsqueeze(0), raw_logits=raw_logits.unsqueeze(0), take_top_k=take_top_k, HD=True)
 
 
     return canonized_logits
