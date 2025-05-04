@@ -11,11 +11,14 @@ LIST_OF_DATASETS_DC = ['WikiMIA_32', 'WikiMIA_64', 'BookMIA_128']
 
 ############### HD ###############
 
-LIST_OF_MODELS_HD = ['mistralai/Mistral-7B-Instruct-v0.2', 'meta-llama/Meta-Llama-3-8B-Instruct']
+LIST_OF_MODELS_HD = ['mistralai/Mistral-7B-Instruct-v0.2', 'meta-llama/Meta-Llama-3-8B-Instruct', 'Qwen/Qwen2.5-7B-Instruct']
+
 
 LIST_OF_DATASETS_HD = ['imdb', 'imdb_test',
                        'movies', 'movies_test',
-                       'hotpotqa', 'hotpotqa_test']
+                       'hotpotqa', 'hotpotqa_test',
+                        'triviaqa', 'triviaqa_test',
+                       'hotpotqa_with_context', 'hotpotqa_with_context_test']
 
 ##################################
 MODEL_VOCAB_SIZES = {
@@ -25,7 +28,8 @@ MODEL_VOCAB_SIZES = {
     "EleutherAI/pythia-12b": 50_690,
     "huggyllama/llama-13b": 32_000,
     "huggyllama/llama-30b": 32_000,
-    "state-spaces/mamba-1.4b-hf": 50_280
+    "state-spaces/mamba-1.4b-hf": 50_280,
+    "Qwen/Qwen2.5-7B-Instruct": 152_064,
 }
 
 PROBE_MODELS = [
@@ -33,8 +37,6 @@ PROBE_MODELS = [
     'LOS-Net',
     'ATP_R_MLP',
     'ATP_R_Transf',
-    ## activation-based
-    'ACT-Vit',
     ]
 
 MAXIMAL_VOCAB_SIZE = 1_000_000

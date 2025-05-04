@@ -7,13 +7,13 @@ DEFAULT_BASE_RAW_DATA_DIR="/home/guy_b/big-storage/raw_data"
 BASE_RAW_DATA_DIR=${1:-$DEFAULT_BASE_RAW_DATA_DIR}
 
 # Allow specifying the number of parallel chunks (default to 8)
-MAX_PARALLEL_JOBS=${2:-8}
+MAX_PARALLEL_JOBS=${2:-5}
 
 # Define datasets
-DATASETS=("imdb" "imdb_test" "movies" "movies_test" "hotpotqa" "hotpotqa_test")
+DATASETS=("imdb" "imdb_test" "movies" "movies_test" "hotpotqa" "hotpotqa_test" "triviaqa" "triviaqa_test" "hotpotqa_with_context" "hotpotqa_with_context_test")
 
 # Define models for each dataset
-MODELS=("mistralai/Mistral-7B-Instruct-v0.2" "meta-llama/Meta-Llama-3-8B-Instruct")
+MODELS=("mistralai/Mistral-7B-Instruct-v0.2" "meta-llama/Meta-Llama-3-8B-Instruct" "Qwen/Qwen2.5-7B-Instruct")
 
 # Define chunks
 CHUNKS=(1 2 3 4 5 6 7 8 9 10)

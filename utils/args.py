@@ -90,7 +90,7 @@ def parse_args_HD():
         "--base_raw_data_dir",
         type=str,
         # default='./raw_data',
-        default='/home/guy_b/big-storage/raw_data',
+        default='/mnt/storage/guy_b/LOS_NET_NIPS',
         help="Base directory for saving raw data."
     )
     
