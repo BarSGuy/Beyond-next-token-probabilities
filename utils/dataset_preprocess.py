@@ -234,14 +234,13 @@ def process_file(params):
         torch.save(label, output_paths[3])
 
     else:
-        raise ValueError("Invalid input type.")
+        print(f'Sample {file_idx} already preprocessed. Skipping...')
             
 
 
 
 def preprocess_data(args, raw_data_dir, LLM, dataset_name, output_dir, N_max=100, topk_preprocess=1000000, input_output_flag = 'input', input_type = "LOS"):
     assert input_output_flag in ['input', 'output'], "input_output_flag must be 'input' or 'output'"
-    args.final_act_tensor_size = eval(args.final_act_tensor_size)
     data_dir = os.path.join(raw_data_dir, LLM, dataset_name)
     os.makedirs(output_dir, exist_ok=True)
     
@@ -253,7 +252,7 @@ def preprocess_data(args, raw_data_dir, LLM, dataset_name, output_dir, N_max=100
     params_list = [(idx, data_dir, output_dir, N_max, topk_preprocess, input_output_flag, input_type) for idx in file_indices]
 
         
-    num_workers = min(int(0.8*multiprocessing.cpu_count()), len(file_indices))  # Use available CPUs
+    num_workers = min(int(0.15*multiprocessing.cpu_count()), len(file_indices))  # Use available CPUs
     
     with multiprocessing.Pool(num_workers) as pool:
         list(tqdm(pool.imap_unordered(process_file, params_list), total=len(file_indices), desc="Preprocessing files"))
