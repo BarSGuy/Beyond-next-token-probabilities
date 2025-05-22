@@ -15,7 +15,8 @@ from utils.dataset_preprocess import *
 from main import get_train_test_datasets, get_train_test_val_subsets
 from typing import Dict, List
 
-
+# NOTE: Change this to the project name of your sweeps
+PROJ = 'LOS-Net'
 
 # -- Wandb helpers -- #
 def get_num_seeds_for_sweep(project_name: str, sweep_name: str):
@@ -338,23 +339,23 @@ def get_results_for_bookmia_cross_LLM(sweep_map):
         row_results = []
         sweep_name = sweep_map[source_llm]
         
-        grid_params_keys = extract_searched_hyperparameters_excluding_seeds("LOS-Net", sweep_name)
+        grid_params_keys = extract_searched_hyperparameters_excluding_seeds(PROJ, sweep_name)
         logger.info(f'[i] The grid params keys for {source_llm} are: {grid_params_keys}')
         
-        best = get_nth_best_run("LOS-Net", sweep_name, "best_val_AUC", 2, higher_is_better=True, logger=logger)
+        best = get_nth_best_run(PROJ, sweep_name, "best_val_AUC", 2, higher_is_better=True, logger=logger)
         logger.info(f'[i] The best run has id: {best.id}')
         
         best_args = best.config
         best_args_filtered_wrt_grid =  {k: v for k, v in best_args.items() if k in grid_params_keys}
         logger.info(f'[i] Extracting args of best run filtered wrt grid: {best_args_filtered_wrt_grid}')
         
-        all_runs = get_runs_for_sweep("LOS-Net", sweep_name, "best_val_AUC")        
+        all_runs = get_runs_for_sweep(PROJ, sweep_name, "best_val_AUC")        
         logger.info("Extracted all runs for the sweep.")
         
         matching_runs = find_runs_with_hyperparams(best_args_filtered_wrt_grid=best_args_filtered_wrt_grid, all_runs=all_runs, grid_params_keys=grid_params_keys)
         
         logger.info(f'[i] keeping only runs that match the best run hyperparameters, found {len(matching_runs)} matching runs.')
-        expected_seeds = get_num_seeds_for_sweep("LOS-Net", sweep_name)
+        expected_seeds = get_num_seeds_for_sweep(PROJ, sweep_name)
         actual_runs = len(matching_runs)
         
         assert actual_runs == expected_seeds, (
@@ -428,7 +429,7 @@ def get_results_for_HD_cross_Datasets_seeds(sweep_map, num_epochs=0, lr=0.001, f
             
             # NOTE: it expects to project name to be called "LOS-Net", and the metric to be "best_val_AUC"
             # NOTE: taken 2nd best run (not 1st), which makes sense if the sweep is over 3 seeds
-            best = get_nth_best_run("LOS-Net", sweep_name, "best_val_AUC", 2, higher_is_better=True, logger=logger)
+            best = get_nth_best_run(PROJ, sweep_name, "best_val_AUC", 2, higher_is_better=True, logger=logger)
             
             logger.info(f'[i] The best run has id: {best.id}')
             best_args = best.config
@@ -494,7 +495,7 @@ def get_results_for_HD_cross_Models_seeds(sweep_map, num_epochs=0, lr=0.001, fro
             
 
 
-            best = get_nth_best_run("LOS-Net", sweep_name, "best_val_AUC", 2, higher_is_better=True, logger=logger)
+            best = get_nth_best_run(PROJ, sweep_name, "best_val_AUC", 2, higher_is_better=True, logger=logger)
             logger.info(f'[i] The best run has id: {best.id}')
             best_args = best.config
             
@@ -569,8 +570,9 @@ def run_transferability_cross_LLMs_HD(num_epochs=10, lr=0.0001, num_seeds=5):
 
     imdb_sweep_map_HD_cross_models = {
         # Models: sweep_name
-        'meta-llama/Meta-Llama-3-8B-Instruct': 'ged1df0g',# '3jjhwou5',   
-        'mistralai/Mistral-7B-Instruct-v0.2': 'dyn12khz', # 'd9lkyfim' 
+        'meta-llama/Meta-Llama-3-8B-Instruct': 'mbcxaw1d',
+        'mistralai/Mistral-7B-Instruct-v0.2': 'h1otb44c',
+        'Qwen/Qwen2.5-7B-Instruct': 'fyizkz09'
     }
     
     get_results_for_HD_cross_Models_seeds(imdb_sweep_map_HD_cross_models, num_epochs=num_epochs, lr=lr, from_scratch=True, num_seeds=num_seeds)
@@ -579,8 +581,9 @@ def run_transferability_cross_LLMs_HD(num_epochs=10, lr=0.0001, num_seeds=5):
     
     movies_sweep_map_HD_cross_models = {
         # Models: sweep_name
-        'meta-llama/Meta-Llama-3-8B-Instruct': 'et2pudmx',# '3jjhwou5',
-        'mistralai/Mistral-7B-Instruct-v0.2': 'gblw6qgv' # 'd9lkyfim' 
+        'meta-llama/Meta-Llama-3-8B-Instruct': 'nrcys17s',
+        'mistralai/Mistral-7B-Instruct-v0.2': 'a5amnezy',
+        'Qwen/Qwen2.5-7B-Instruct': 'penzw2rd'
     }
     
     get_results_for_HD_cross_Models_seeds(movies_sweep_map_HD_cross_models, num_epochs=num_epochs, lr=lr, from_scratch=True, num_seeds=num_seeds)
@@ -588,8 +591,9 @@ def run_transferability_cross_LLMs_HD(num_epochs=10, lr=0.0001, num_seeds=5):
     
     hotpotqa_sweep_map_HD_cross_models = {
         # Models: sweep_name
-        'meta-llama/Meta-Llama-3-8B-Instruct': 'cshbvh89',# '3jjhwou5',
-        'mistralai/Mistral-7B-Instruct-v0.2': 'kbsfdhqm' # 'd9lkyfim' 
+        'meta-llama/Meta-Llama-3-8B-Instruct': 'qzxswss4',
+        'mistralai/Mistral-7B-Instruct-v0.2': '952ybkat',
+        'Qwen/Qwen2.5-7B-Instruct': 'tslop9sa'
     }
     get_results_for_HD_cross_Models_seeds(hotpotqa_sweep_map_HD_cross_models, num_epochs=num_epochs, lr=lr, from_scratch=True, num_seeds=num_seeds)
     get_results_for_HD_cross_Models_seeds(hotpotqa_sweep_map_HD_cross_models, num_epochs=num_epochs, lr=lr, from_scratch=False, num_seeds=num_seeds)
@@ -598,23 +602,30 @@ def run_transferability_cross_datasets_HD(num_epochs=10, lr=0.0001, num_seeds=5)
     
     mistral_sweep_map_HD_cross_datasets = {
         # Datasets: sweep_name
-        'imdb': 'dyn12khz',
-        'movies': 'gblw6qgv',
-        'hotpotqa': 'kbsfdhqm'
+        'imdb': 'h1otb44c',
+        'movies': 'a5amnezy',
+        'hotpotqa': '952ybkat'
     }
     get_results_for_HD_cross_Datasets_seeds(mistral_sweep_map_HD_cross_datasets, num_epochs=num_epochs, lr=lr, from_scratch=True, num_seeds=num_seeds)
     get_results_for_HD_cross_Datasets_seeds(mistral_sweep_map_HD_cross_datasets, num_epochs=num_epochs, lr=lr, from_scratch=False, num_seeds=num_seeds)
 
     meta_sweep_map_HD_cross_datasets = {
         # Datasets: sweep_name
-        'imdb': 'ged1df0g',
-        'movies': 'et2pudmx',
-        'hotpotqa': 'cshbvh89'
+        'imdb': 'mbcxaw1d',
+        'movies': 'nrcys17s',
+        'hotpotqa': 'qzxswss4'
     }
     get_results_for_HD_cross_Datasets_seeds(meta_sweep_map_HD_cross_datasets, num_epochs=num_epochs, lr=lr, from_scratch=True, num_seeds=num_seeds)
     get_results_for_HD_cross_Datasets_seeds(meta_sweep_map_HD_cross_datasets, num_epochs=num_epochs, lr=lr, from_scratch=False, num_seeds=num_seeds)
 
-
+    qwen_sweep_map_HD_cross_datasets = {
+        # Datasets: sweep_name
+        'imdb': 'fyizkz09',
+        'movies': 'penzw2rd',
+        'hotpotqa': 'tslop9sa'
+    }
+    get_results_for_HD_cross_Datasets_seeds(qwen_sweep_map_HD_cross_datasets, num_epochs=num_epochs, lr=lr, from_scratch=True, num_seeds=num_seeds)
+    get_results_for_HD_cross_Datasets_seeds(qwen_sweep_map_HD_cross_datasets, num_epochs=num_epochs, lr=lr, from_scratch=False, num_seeds=num_seeds)
 
     
 if __name__ == "__main__":
