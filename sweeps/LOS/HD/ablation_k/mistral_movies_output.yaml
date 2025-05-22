@@ -1,0 +1,82 @@
+# wandb sweep ./sweeps/LOS/HD/mistral_movies_output.yaml
+# conda activate hellucinations3 && CUDA_VISIBLE_DEVICES=2 wandb agent guybs/LOS-Net/pip01m6c
+
+program: ./main.py 
+
+method: grid  # Using grid search to exhaustively find the best hyperparameters
+
+metric:
+  name: best_val_AUC  # Using validation AUC to evaluate performance
+  goal: maximize  # We want to maximize the validation AUC
+ 
+parameters:
+  # Training settings
+  num_epochs:
+    values: [300]
+  batch_size:
+    values: [64]
+  patience:
+    values: [30]
+  seed:
+    values: [0, 1, 2]
+
+  # Model architecture
+  probe_model:
+    values: ["LOS-Net"]
+  hidden_dim:
+    values: [256]
+  num_layers:
+    values: [2]
+  heads:
+    values: [8]
+  dropout:
+    values: [0.0]
+  pool:
+    values: ["cls"]
+
+  # Optimization settings
+  lr:
+    values: [1e-4]
+  weight_decay:
+    values: [0.0]
+
+
+  # Dataset and input settings
+  train_dataset:
+    values: ["movies"]
+  test_dataset:
+    values: ["movies_test"]
+  input_type:
+    values: ["LOS"]
+  input_output_type:
+    values: ["output"]
+  topk_preprocess:
+    values: [1_000]
+  topk_dim:
+    values: [10, 50, 100, 500]
+  rank_encoding:
+    values: ["scale_encoding"]
+  num_workers:
+    values: [4]
+  pin_memory:
+    values: [1]
+
+  # Cross-validation
+  num_folds:
+    values: [5]
+  fold_to_run:
+    values: [0]
+
+  # Paths
+  best_model_path:
+    values: ["saved_models"]
+  base_pre_processed_data_dir:
+    values: ['/home/guy_b/LOS-Net/pre_processed_data']
+
+  # Model type
+  LLM:
+    values: ['mistralai/Mistral-7B-Instruct-v0.2']
+
+  # Hardware settings
+  cuda_idx:
+    values: [0]
