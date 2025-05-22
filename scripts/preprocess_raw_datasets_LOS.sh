@@ -1,9 +1,11 @@
 #!/bin/bash
 
+# ./scripts/preprocess_raw_datasets_LOS.sh /mnt/storage/guy_b/LOS_NET /home/guy_b/LOS-Net-cleaned/LLM-Output-Signatures-Network/pre_processed_data 4
+
 # Default base directory for raw data
-DEFAULT_BASE_RAW_DATA_DIR="/home/guy_b/big-storage/raw_data"
+DEFAULT_BASE_RAW_DATA_DIR="/mnt/storage/guy_b/LOS_NET_with_raw_logits"
 # Default base directory for pre-processed data
-DEFAULT_BASE_PRE_PROCESSED_DATA_DIR="/home/guy_b/LOS-Net/pre_processed_data"
+DEFAULT_BASE_PRE_PROCESSED_DATA_DIR="/home/guy_b/LOS-Net-cleaned/LLM-Output-Signatures-Network/pre_processed_data"
 
 # Use provided arguments as base directories, otherwise use defaults
 BASE_RAW_DATA_DIR=${1:-$DEFAULT_BASE_RAW_DATA_DIR}
@@ -21,12 +23,12 @@ MODELS[WikiMIA_32]="EleutherAI/pythia-6.9b huggyllama/llama-13b huggyllama/llama
 MODELS[WikiMIA_64]="EleutherAI/pythia-6.9b huggyllama/llama-13b huggyllama/llama-30b state-spaces/mamba-1.4b-hf"
 MODELS[BookMIA_128]="EleutherAI/pythia-6.9b EleutherAI/pythia-12b huggyllama/llama-13b huggyllama/llama-30b"
 
-MODELS[imdb]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct"
-MODELS[imdb_test]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct"
-MODELS[movies]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct"
-MODELS[movies_test]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct"
-MODELS[hotpotqa]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct"
-MODELS[hotpotqa_test]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct"
+MODELS[imdb]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct Qwen/Qwen2.5-7B-Instruct"
+MODELS[imdb_test]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct Qwen/Qwen2.5-7B-Instruct"
+MODELS[movies]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct Qwen/Qwen2.5-7B-Instruct"
+MODELS[movies_test]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct Qwen/Qwen2.5-7B-Instruct"
+MODELS[hotpotqa]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct Qwen/Qwen2.5-7B-Instruct"
+MODELS[hotpotqa_test]="mistralai/Mistral-7B-Instruct-v0.2 meta-llama/Meta-Llama-3-8B-Instruct Qwen/Qwen2.5-7B-Instruct"
 
 declare -A INPUT_OUTPUT_TYPES
 INPUT_OUTPUT_TYPES[WikiMIA_32]="input"
@@ -39,7 +41,6 @@ INPUT_OUTPUT_TYPES[movies]="output"
 INPUT_OUTPUT_TYPES[movies_test]="output"
 INPUT_OUTPUT_TYPES[hotpotqa]="output"
 INPUT_OUTPUT_TYPES[hotpotqa_test]="output"
-
 
 declare -A TOPK_PREPROCESS  # Explicitly declare an associative array
 
@@ -83,8 +84,7 @@ for DATASET in "${DATASETS[@]}"; do
       --topk_preprocess "${TOPK_PREPROCESS[$DATASET]}" \
       --input_output_type "${INPUT_OUTPUT_TYPES[$DATASET]}" \
       --N_max 100 \
-      --input_type "LOS" \
-      --L_max 50 2>&1 | tee -a "$LOG_FILE" &
+      --input_type "LOS" 2>&1 | tee -a "$LOG_FILE" &
     
     ((RUNNING_JOBS++))
 
