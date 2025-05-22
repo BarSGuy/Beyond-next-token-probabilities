@@ -1,11 +1,13 @@
 # LOS-Net
 
 This repository contains the official code of the paper
-**Learning on LLM Output Signatures for gray-box LLM Behavior Analysis)**
+**Learning on LLM Output Signatures for gray-box Behavior Analysis**
 
 <p align="center">
   <img src="./Figures/LOS.png" width="100%" height="50%">
 </p>
+
+
 
 ## Table of Contents
 
