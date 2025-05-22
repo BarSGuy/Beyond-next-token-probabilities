@@ -188,10 +188,10 @@ def winobias_preprocess(args, model_name, all_questions, labels):
 
 def load_data_triviaqa(test=False, legacy=False):
     if legacy:
-        with open('./data/verified-web-dev.json') as f:
+        with open('./../data/verified-web-dev.json') as f:
             data_verified = json.load(f)
             data_verified = data_verified['Data']
-        with open('./data/web-dev.json') as f:
+        with open('./../data/web-dev.json') as f:
             data = json.load(f)
             data = data['Data']
         questions_from_verified = [x['Question'] for x in data_verified]
@@ -211,9 +211,9 @@ def load_data_triviaqa(test=False, legacy=False):
             return [ex['Question'] for ex in data_not_verified], [ex['Answer']['Aliases'] for ex in data_not_verified]
     else:
         if test:
-            file_path = './data/triviaqa-unfiltered/unfiltered-web-dev.json'
+            file_path = '/home/guy_b/LOS-Net/data/triviaqa-unfiltered/unfiltered-web-dev.json'
         else:
-            file_path = './data/triviaqa-unfiltered/unfiltered-web-train.json'
+            file_path = '/home/guy_b/LOS-Net/data/triviaqa-unfiltered/unfiltered-web-train.json'
         with open(file_path) as f:
             data = json.load(f)
             data = data['Data']
@@ -267,6 +267,7 @@ def load_data(args, dataset_name):
         preprocess_fn = triviqa_preprocess
     elif dataset_name == 'triviaqa_test':
         all_questions, labels = load_data_triviaqa(True)
+        preprocess_fn = triviqa_preprocess
     elif dataset_name == 'math':
         all_questions, labels = load_data_math(test=False)
         preprocess_fn = math_preprocess
