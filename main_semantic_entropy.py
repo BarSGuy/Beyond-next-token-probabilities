@@ -50,7 +50,7 @@ def parse_args_SE():
     parser.add_argument(
         "--dataset",
         choices=LIST_OF_DATASETS_HD,
-        default='hotpotqa_test',
+        default='movies_test',
         help="Dataset to be used."
     )
     
@@ -60,18 +60,26 @@ def parse_args_SE():
         help='number of examples to use', 
         default=10_000
     )
+
+    parser.add_argument(
+        "--start_index", 
+        type=int, 
+        help='first index to consider', 
+        default=0
+    )
+
+    parser.add_argument(
+        "--end_index", 
+        type=int, 
+        help='last index to consider', 
+        default=10_000
+    )
     
     parser.add_argument(
         "--num_generations",
         type=int,
         help="number of different generations to run on which to then calculate semantic entropy",
         default=10
-    )
-
-    parser.add_argument(
-        "--temperature",
-        type=float,
-        default=1.0
     )
 
     parser.add_argument(
@@ -98,11 +106,16 @@ def generate(
         device,
         do_sample=True,
         temperature=1.0,
+        top_k=50,
+        top_p=0.9,
         max_new_tokens=100,
         stop_token_id=None,
-        additional_kwargs=None):
+        additional_kwargs=None,
+        batch_n=None):
 
     model_input = tokenize(prompt, tokenizer, model_name).to(device)
+    if batch_n is not None and batch_n > 1:
+        model_input = model_input.repeat(batch_n, 1)
 
     if stop_token_id is not None:
         eos_token_id = stop_token_id
@@ -118,13 +131,20 @@ def generate(
                                     return_dict_in_generate=True,
                                     do_sample=do_sample,
                                     temperature=temperature,
+                                    top_k=top_k,
+                                    top_p=top_p,
                                     eos_token_id=eos_token_id,
                                     **(additional_kwargs or {}))
-        
-        full_answer = tokenizer.decode(model_output.sequences[0], skip_special_tokens=True)
+        transition_scores = model.compute_transition_scores(
+            model_output.sequences, model_output.scores, normalize_logits=True)
+
+    responses = list()
+    for i in range(model_output.sequences.shape[0]):
+
+        full_answer = tokenizer.decode(model_output.sequences[i], skip_special_tokens=True)
         
         # Remove input from answer.
-        input_data_offset = len(tokenizer.decode(model_input[0], skip_special_tokens=True))
+        input_data_offset = len(tokenizer.decode(model_input[i], skip_special_tokens=True))
         answer = full_answer[input_data_offset:]
         
         # Remove stop_words from answer.
@@ -153,14 +173,12 @@ def generate(
         # non-trivial interactions between the input_data and generated part
         # in tokenization (particularly around whitespaces.)
         token_stop_index = tokenizer(full_answer[:input_data_offset + stop_at], return_tensors="pt")['input_ids'].shape[1]
-        n_input_token = len(model_input[0])
+        n_input_token = len(model_input[i])
         n_generated = token_stop_index - n_input_token
         if n_generated == 0:
             n_generated = 1
 
-        transition_scores = model.compute_transition_scores(
-            model_output.sequences, model_output.scores, normalize_logits=True)
-        log_likelihoods = [score.item() for score in transition_scores[0]]
+        log_likelihoods = [score.item() for score in transition_scores[i]]
         if len(log_likelihoods) == 1:
             log_likelihoods = log_likelihoods
         else:
@@ -172,41 +190,49 @@ def generate(
         # are generating the low temperature one ...
         # NB: This is important for computing correctness
         if not do_sample:
-            answer = tokenizer.decode(model_output['sequences'][0][len(model_input[0]):])
+            assert i == 0
+            answer = tokenizer.decode(model_output['sequences'][0][len(model_input[i]):])
 
-    prefix = 'GREEDY ' if not do_sample else ''
-    print(f'\n{prefix}ANSWER:\n', answer, '\n')
+        prefix = 'GREEDY ' if not do_sample else ''
+        print(f'\n{prefix}ANSWER:\n', answer, '\n')
 
-    return (answer, log_likelihoods)
+        responses.append((answer,log_likelihoods))
+
+    return responses
 
 def sample_responses(prompt, model, tokenizer, model_name, device, max_new_tokens, stop_token_id, args):
-    responses = [generate(
+    responses = generate(
         prompt,
         model,
         model_name,
         tokenizer,
         device,
-        False,
-        0.0,
-        max_new_tokens,
-        stop_token_id)]
-    gen = lambda: generate(
-        prompt,
-        model,
-        model_name,
-        tokenizer,
-        device,
-        True,
-        args.temperature,
-        max_new_tokens,
-        stop_token_id)
+        do_sample=False,
+        temperature=0.0,
+        top_k=None,
+        top_p=None,
+        max_new_tokens=max_new_tokens,
+        stop_token_id=stop_token_id)
     t_0 = time.time()
-    responses += [gen() for _ in range(args.num_generations)]
+    responses += generate(
+        prompt,
+        model,
+        model_name,
+        tokenizer,
+        device,
+        do_sample=True,
+        temperature=1.0,  # Stochastic generation parameters as in https://www.nature.com/articles/s41586-024-07421-0
+        top_k=50,
+        top_p=0.9,
+        max_new_tokens=max_new_tokens,
+        stop_token_id=stop_token_id,
+        batch_n=args.num_generations)
     gen_time = time.time() - t_0
     return responses, gen_time
 
 
 def process_and_calculate_entropy_scores(
+        index,
         logger,
         args,
         data,
@@ -220,39 +246,43 @@ def process_and_calculate_entropy_scores(
         wrong_labels,
         labels):
 
-    pred_dict = dict()
-    for index, prompt in tqdm(enumerate(data), desc="Processing Prompts"):
+    logger.info(f"Processing index {index}")
+    prompt = data[index]
+    print(f"\nPROMPT [{index}]:\n", prompt, '\n')
+    print("\nEXPECTED ANSWER:\n", labels[index], '\n')
 
-        logger.info(f"Processing index {index}")
-        print("PROMPT:\n", prompt, '\n')
-        print("\nEXPECTED ANSWER:\n", labels[index], '\n')
+    logger.info("Generating possible responses...")
+    responses, gen_time = sample_responses(prompt, model, tokenizer, model_name, device, max_new_tokens, stop_token_id, args)
+    answers = [r[0] for r in responses]
+    log_liks = [r[1] for r in responses]
 
-        logger.info("Generating possible responses...")
-        responses, gen_time = sample_responses(prompt, model, tokenizer, model_name, device, max_new_tokens, stop_token_id, args)
-        answers = [r[0] for r in responses]
-        log_liks = [r[1] for r in responses]
+    logger.info(f"Computing correctness for generated ``greedy`` response...")
+    res = compute_correctness([prompt], args.dataset, model_name, [labels[index]], model, [answers[0]], tokenizer, [wrong_labels[index]] if wrong_labels is not None else None)
+    label = min(res['correctness'])
+    logger.info(f"Label: {label} for answer {answers[0]}")
+    
+    logger.info("Clustering and calculating entropy...")
 
-        logger.info(f"Computing correctness for generated ``greedy`` response...")
-        res = compute_correctness([data[index]], args.dataset, model_name, [labels[index]], model, [answers[0]], tokenizer, wrong_labels)
-        label = min(res['correctness'])
-        logger.info(f"Label: {label} for answer {answers[0]}")
-        
-        logger.info("Clustering and calculating entropy...")
+    t_0 = time.time()
+    semantic_ids = get_semantic_ids(
+            answers[1:], model=entailment_model,
+            strict_entailment=args.strict_entailment, example=(prompt if args.entail_with_question else None))
+    cluster_time = time.time() - t_0
+    log_liks_agg = [np.mean(log_lik) for log_lik in log_liks[1:]]  # Length normalization of generation probabilities.
+    assert len(semantic_ids) == len(log_liks_agg) == args.num_generations
+    log_likelihood_per_semantic_id = logsumexp_by_id(semantic_ids, log_liks_agg, agg='sum_normalized')
+    semantic_entropy = predictive_entropy_rao(log_likelihood_per_semantic_id)
+    se_time = time.time() - t_0
 
-        t_0 = time.time()
-        semantic_ids = get_semantic_ids(
-                answers[1:], model=entailment_model,
-                strict_entailment=args.strict_entailment, example=(prompt if args.entail_with_question else None))
-        cluster_time = time.time() - t_0
-        log_liks_agg = [np.mean(log_lik) for log_lik in log_liks[1:]]  # Length normalization of generation probabilities.
-        assert len(semantic_ids) == len(log_liks_agg) == args.num_generations
-        log_likelihood_per_semantic_id = logsumexp_by_id(semantic_ids, log_liks_agg, agg='sum_normalized')
-        semantic_entropy = predictive_entropy_rao(log_likelihood_per_semantic_id)
-        se_time = time.time() - t_0
-        
-        pred_dict[index] = (semantic_entropy, semantic_ids, log_liks_agg, label, answers[0], labels[index], gen_time, cluster_time, se_time)
-        
-    return pred_dict
+    print("\nRUNTIMES\n")
+    print(f"  - auxiliary generation:                 {gen_time:.2f}")
+    print(f"  - clustering:                           {cluster_time:.2f}")
+    print(f"  - SE calculation (includes clust.):     {se_time:.2f}")
+    print("-----------------------------------------------------------------------")
+    print(f"overall:                                  {gen_time+se_time:.2f}")
+    
+    return (semantic_entropy, semantic_ids, log_liks_agg, label, answers[0], labels[index], gen_time, cluster_time, se_time)
+
 
 def main():
 
@@ -260,6 +290,9 @@ def main():
     logger = get_logger()
     args = parse_args_SE()
     logger.info(f"Parsed Arguments: {vars(args)}")
+    os.makedirs(args.output_folder, exist_ok=True)
+    exp_name = f"semantic_entropy__{args.dataset}__{args.n_samples}__{args.LLM.replace('/', '_')}__{args.num_generations}__{args.entailment_model.replace('/', '_')}__{args.strict_entailment}__{args.entail_with_question}__{args.seed}"
+    os.makedirs(os.path.join(args.output_folder, exp_name), exist_ok=True)
 
     # Set the random seed for reproducibility
     set_seed(args.seed)
@@ -306,19 +339,27 @@ def main():
         all_questions = preprocess_fn(args, args.LLM, all_questions, labels)
     
     logger.info(f"Starting to generate model answers.")
-    pred_dict = process_and_calculate_entropy_scores(
-        logger,
-        args,
-        all_questions,
-        llm,
-        tokenizer,
-        entailment_model,
-        device,
-        args.LLM,
-        max_new_tokens,
-        stop_token_id,
-        wrong_labels,
-        labels)
+
+    pred_dict = dict()
+    for index in tqdm(range(len(all_questions)), desc="Processing Prompts"):
+        if args.start_index <= index < args.end_index:
+            pred_dict[index] = process_and_calculate_entropy_scores(
+                index,
+                logger,
+                args,
+                all_questions,
+                llm,
+                tokenizer,
+                entailment_model,
+                device,
+                args.LLM,
+                max_new_tokens,
+                stop_token_id,
+                wrong_labels,
+                labels)
+            # Save ...
+            with open(os.path.join(args.output_folder, exp_name, f'{index}.pkl'), 'wb') as handle:
+                pickle.dump(pred_dict[index], handle)
     
     all_labels = list()
     all_predictions = list()
@@ -328,7 +369,7 @@ def main():
     times = list()
     for index in pred_dict:
         all_labels.append(pred_dict[index][3])
-        all_predictions.append(pred_dict[index][0])
+        all_predictions.append(-pred_dict[index][0])
         gen_times.append(pred_dict[index][6])
         clust_times.append(pred_dict[index][7])
         se_times.append(pred_dict[index][8])
@@ -341,10 +382,9 @@ def main():
     print(f"  - clustering:                           {np.mean(clust_times):.2f} ± {np.std(clust_times):.2f}")
     print(f"  - SE calculation (includes clust.):     {np.mean(se_times):.2f} ± {np.std(se_times):.2f}")
     print("-----------------------------------------------------------------------")
-    print(f"overall:                                  {np.mean(times)}±{np.std(times)}")
+    print(f"overall:                                  {np.mean(times):.2f}±{np.std(times):.2f}")
 
-    os.makedirs(args.output_folder, exist_ok=True)
-    exp_name = f"semantic_entropy__{args.dataset}__{args.n_samples}__{args.LLM.replace('/', '_')}__{args.temperature}__{args.num_generations}__{args.entailment_model.replace('/', '_')}__{args.strict_entailment}__{args.entail_with_question}__{args.seed}.pkl"
+    exp_name = f"semantic_entropy__{args.dataset}__{args.n_samples}__{args.LLM.replace('/', '_')}__{args.num_generations}__{args.entailment_model.replace('/', '_')}__{args.strict_entailment}__{args.entail_with_question}__{args.seed}__{args.start_index}__{args.end_index}.pkl"
     with open(os.path.join(args.output_folder, exp_name), 'wb') as handle:
         pickle.dump((pred_dict, rocauc), handle)
 
