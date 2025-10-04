@@ -1,7 +1,7 @@
 # LOS-Net
 
 This repository contains the official code of the paper
-**Learning on LLM Output Signatures for gray-box Behavior Analysis**
+**Beyond Next Token Probabilities: Learnable, Fast Detection of Hallucinations and Data Contamination on LLM Output Distributions**
 
 <p align="center">
   <img src="./Figures/LOS.png" width="100%" height="50%">
