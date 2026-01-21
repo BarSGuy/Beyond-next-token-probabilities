@@ -1,4 +1,4 @@
-# LOS-Net
+# 📦 LOS-Net Official Repository
 
 This repository contains the official code of the paper
 [**Beyond Next Token Probabilities: Learnable, Fast Detection of Hallucinations and Data Contamination on LLM Output Distributions**](https://arxiv.org/pdf/2503.14043) (*AAAI 2026*)
@@ -28,7 +28,7 @@ We explore predicting problematic behaviors of LLMs, such as hallucinations and 
 }
 ```
 
-
+Below we present the instructions to reproduce all the experiments we conducted in the paper.
 
 ## Table of Contents
 
