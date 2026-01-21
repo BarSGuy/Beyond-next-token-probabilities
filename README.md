@@ -7,7 +7,7 @@ This repository contains the official code of the paper
 # Overview
 
 
-We explore predicting problematic behaviors of LLMs, such as hallucinations and data contamination, by learning from LLM Output Signatures (LOS), which are defined as pairs of TDS and ATP (see illustration below). We develop LOS-Net, a learnable gray-box model trained on LOS to predict these problematic behaviors.
+We explore predicting problematic behaviors of LLMs, such as Hallucination Detection (HD) and Data Contamination (DC) detection, by learning from LLM Output Signatures (LOS), which are defined as pairs of TDS and ATP (see illustration below). We develop LOS-Net, a learnable gray-box model trained on LOS to predict these problematic behaviors.
 
 
 <p align="center">
