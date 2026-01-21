@@ -1,11 +1,32 @@
 # LOS-Net
 
 This repository contains the official code of the paper
-**Beyond Next Token Probabilities: Learnable, Fast Detection of Hallucinations and Data Contamination on LLM Output Distributions** [https://arxiv.org/pdf/2503.14043]
+[**Beyond Next Token Probabilities: Learnable, Fast Detection of Hallucinations and Data Contamination on LLM Output Distributions**](https://arxiv.org/pdf/2503.14043) (*AAAI 2026*)
+
+
+# Overview
+
+
+We explore predicting problematic behaviors of LLMs, such as hallucinations and data contamination, by learning from LLM Output Signatures (LOS), which are defined as pairs of TDS and ATP (see illustration below). We develop LOS-Net, a learnable gray-box model trained on LOS to predict these problematic behaviors.
+
 
 <p align="center">
   <img src="./Figures/LOS.png" width="100%" height="50%">
 </p>
+
+
+
+
+⭐ If you find our implementation and paper helpful, please consider citing our work ⭐ :
+
+```bibtex
+@article{bar2025learning,
+  title={Learning on LLM Output Signatures for Gray-Box Behavior Analysis},
+  author={Bar-Shalom, Guy and Frasca, Fabrizio and Lim, Derek and Gelberg, Yoav and Ziser, Yftah and El-Yaniv, Ran and Chechik, Gal and Maron, Haggai},
+  journal={arXiv preprint arXiv:2503.14043},
+  year={2025}
+}
+```
 
 
 
@@ -22,7 +43,7 @@ This repository contains the official code of the paper
     - [Zero-Shot Generalization on BookMIA](#zero-shot-generalization-on-bookmia)
     - [Generalization Across Datasets on Hallucinations Datasets](#generalization-across-datasets-on-hallucinations-datasets)
     - [Plot heatmaps](#plot-heatmaps)
-- [Credits](#credits)
+
 
 # Installation
 
@@ -380,5 +401,3 @@ where `<MODEL>` represents the model being evaluated, and the second file corres
   
   3. run `main.py` to generate the heatmaps.
   
-
-  # Credits
