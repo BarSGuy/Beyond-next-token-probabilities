@@ -9,7 +9,7 @@ DEFAULT_BASE_RAW_DATA_DIR="/home/guy_b/big-storage/raw_data"
 BASE_RAW_DATA_DIR=${1:-$DEFAULT_BASE_RAW_DATA_DIR}
 
 # Allow specifying the number of parallel chunks (default to 8)
-MAX_PARALLEL_JOBS=${2:-3}
+MAX_PARALLEL_JOBS=${2:-8}
 
 # Define datasets
 DATASETS=("imdb" "imdb_test" "movies" "movies_test" "hotpotqa" "hotpotqa_test")
